@@ -20,7 +20,8 @@ machine:
   #environment:
   #  CIRCLE_ENV: test
   #  DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/circle_test
-
+general:
+  build_dir: ClanciWeb
 ## Customize checkout
 #checkout:
 #  post:
