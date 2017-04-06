@@ -53,13 +53,13 @@ database:
 
 ## Customize test commands
 test:
-  override:
-    - phpunit test/unit-tests # use PHPunit for testing
+  #override:
+  # - phpunit test/unit-tests # use PHPunit for testing
   post:
-    - bundle exec rake jasmine:ci: # add an extra test type
-        environment:
-          RAILS_ENV: test
-          RACK_ENV: test
+    #- bundle exec rake jasmine:ci: # add an extra test type
+      environment:
+        RAILS_ENV: test
+        RACK_ENV: test
 
 ## Customize deployment commands
 deployment:
@@ -69,7 +69,7 @@ deployment:
       appname: foo-bar-123
 
 ## Custom notifications
-notify:
-  webhooks:
+#notify:
+# webhooks:
     # A list of hashes representing hooks. Only the url field is supported.
-    - url: https://someurl.com/hooks/circle
+ #   - url: https://someurl.com/hooks/circle
