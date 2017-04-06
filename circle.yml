@@ -46,7 +46,7 @@ dependencies:
     - "~/custom_2" # relative to the user's home directory
 
 ## Customize database setup
-database:
+#database:
   #override:
     # replace CircleCI's generated database.yml
    # - cp clanci.sql config/database.yml
@@ -70,7 +70,7 @@ deployment:
       appname: foo-bar-123
 
 ## Custom notifications
-notify:
-  webhooks:
+#notify:
+#  webhooks:
     # A list of hashes representing hooks. Only the url field is supported.
-    - url: https://someurl.com/hooks/circle
+#    - url: https://someurl.com/hooks/circle
