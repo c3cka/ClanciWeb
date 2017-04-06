@@ -47,10 +47,10 @@ dependencies:
 
 ## Customize database setup
 database:
-  override:
+  #override:
     # replace CircleCI's generated database.yml
-    - cp clanci.sql config/database.yml
-    - bundle exec rake db:create db:schema:load
+   # - cp clanci.sql config/database.yml
+   # - bundle exec rake db:create db:schema:load
 
 ## Customize test commands
 test:
