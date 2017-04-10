@@ -1,75 +1,87 @@
-## Customize the test machine
-machine:
+version: 2
+jobs:
+  build:
+    docker:
+      - image: ubuntu:14.04
 
-  timezone:
-    Europe/Zagreb # Set the timezone
+      - image: mongo:2.6.8
+        command: [mongod, --smallfiles]
 
-  # Version of ruby to use
-  ruby:
-    version:
-      1.8.7-p358-falcon-perf
-
-  # Override /etc/hosts
-  hosts:
-    circlehost: 127.0.0.1
-    dev.mycompany.com: 127.0.0.1
-
-  # Add some environment variables
-  environment:
-    CIRCLE_ENV: test
-    DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/circle_test
-
-## Customize checkout
-checkout:
-  post:
-    - git submodule sync
-    - git submodule update --init # use submodules
-
-## Customize dependencies
-dependencies:
-  pre:
-    - npm install coffeescript # install from a different package manager
-    - gem uninstall bundler # use a custom version of bundler
-    - gem install bundler --pre
-
-  override:
-    - bundle install: # note ':' here
-        timeout: 180 # fail if command has no output for 3 minutes
-        # IMPORTANT NOTE: ^^ the timeout modifier above must be
-        # double indented (four spaces) from the previous line
-  
-  # we automatically cache and restore many dependencies between
-  # builds. If you need to, you can add custom paths to cache:
-  cache_directories:
-    - "custom_1"   # relative to the build directory
-    - "~/custom_2" # relative to the user's home directory
-
-## Customize database setup
-database:
-  override:
-    # replace CircleCI's generated database.yml
-    - cp config/database.yml.ci config/database.yml
-    - bundle exec rake db:create db:schema:load
-
-## Customize test commands
-test:
-  override:
-    - phpunit test/unit-tests # use PHPunit for testing
-  post:
-    - bundle exec rake jasmine:ci: # add an extra test type
+      - image: postgres:9.4.1
+        # some containers require setting environment variables
         environment:
-          RAILS_ENV: test
-          RACK_ENV: test
+          POSTGRES_USER: root
 
-## Customize deployment commands
-deployment:
-  staging:
-    branch: master
-    heroku:
-      appname: foo-bar-123
+      - image: redis@sha256:54057dd7e125ca41afe526a877e8bd35ec2cdd33b9217e022ed37bdcf7d09673
 
-## Custom notifications
-notify:
-  webhooks:
-    # A list of hashes representing hooks. Only the url field is supported.
-    - url: https://someurl.com/hooks/circle
+      - image: rabbitmq:3.5.4
+
+    environment:
+      TEST_REPORTS: /tmp/test-reports
+
+    working_directory: ~/my-project
+
+    branches:
+      ignore:
+        - develop
+        - /feature-.*/
+
+    steps:
+      - checkout
+
+      - run: command: echo 127.0.0.1 devhost | sudo tee -a /etc/hosts
+
+      # Create Postgres users and database
+      # Note the YAML heredoc '|' for nicer formatting
+      - run: |
+          sudo -u root createuser -h localhost --superuser ubuntu &&
+          sudo createdb -h localhost test_db
+
+      - restore_cache:
+          keys:
+            - v1-my-project-{{ checksum "project.clj" }}
+            - v1-my-project-
+
+      - run:
+          environment:
+            SSH_TARGET: "localhost"
+            TEST_ENV: "linux"
+          command: |
+            set -xu
+            mkdir -p ${TEST_REPORTS}
+            run-tests.sh
+            cp out/tests/*.xml ${TEST_REPORTS}
+
+      - run: |
+          set -xu
+          mkdir -p /tmp/artifacts
+          create_jars.sh ${CIRCLE_BUILD_NUM}
+          cp *.jar /tmp/artifacts
+
+      - save_cache:
+          key: v1-my-project-{{ checksum "project.clj" }}
+          paths:
+            - ~/.m2
+
+      # Deploy staging
+      - deploy:
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "staging" ];
+              then ansible-playbook site.yml -i staging;
+            fi
+
+      # Deploy production
+      - deploy:
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ];
+              then ansible-playbook site.yml -i production;
+            fi
+
+      # Save artifacts
+      - store_artifacts:
+          path: /tmp/artifacts
+          destination: build
+
+      # Upload test results
+      - store_test_results:
+          path: /tmp/test-reports
