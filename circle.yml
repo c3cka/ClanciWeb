@@ -1,8 +1,8 @@
 ## Customize the test machine
 machine:
 
-  #timezone:
-  # America/Los_Angeles # Set the timezone
+  timezone:
+    Europe/Zagreb # Set the timezone
 
   # Version of ruby to use
   #ruby:
@@ -10,9 +10,9 @@ machine:
   #   1.8.7-p358-falcon-perf
 
   # Override /etc/hosts
-  #hosts:
-  #  circlehost: 127.0.0.1
-  #  dev.mycompany.com: 127.0.0.1
+  hosts:
+    circlehost: 127.0.0.1
+    dev.mycompany.com: 127.0.0.1
 
   # Add some environment variables
   #environment:
@@ -21,9 +21,9 @@ machine:
 
 ## Customize checkout
 checkout:
-  #post:
-  #  - git submodule sync
-  #  - git submodule update --init # use submodules
+  post:
+    - git submodule sync
+    - git submodule update --init # use submodules
 
 ## Customize dependencies
 dependencies:
