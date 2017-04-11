@@ -2,4 +2,4 @@ machine:
   php:
 test:
   override:
-    - bin/phpspec run
+    - phpspec run
